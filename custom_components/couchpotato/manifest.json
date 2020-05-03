@@ -1,0 +1,8 @@
+{
+  "domain": "CoachPotato",
+  "name": "CoachPotato",
+  "documentation": "",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": ["@youdroid"]
+}
