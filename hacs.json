@@ -1,0 +1,6 @@
+{
+  "name": "couchpotato",
+  "domains": ["sensor"],
+  "render_readme": true,
+  "country": "FR"
+}
