@@ -1,3 +1,7 @@
+![Validate with hassfest](https://github.com/youdroid/home-assistant-couchpotato/workflows/Validate%20with%20hassfest/badge.svg)
+![HACS Validate](https://github.com/youdroid/home-assistant-couchpotato/workflows/HACS%20Validate/badge.svg)
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/custom-components/hacs)
+
 # CouchPotato Wanted And Already Downloaded Movies
 
 Home Assistant component to feed Upcoming Media Card with Couchpotato's recently downloaded media, and wanted media.
