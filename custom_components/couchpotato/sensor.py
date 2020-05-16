@@ -94,8 +94,10 @@ class CouchPotatoSensor(Entity):
                 card_items['rating'] = ('\N{BLACK STAR} ' + str(movie['info']['rating']['imdb'][0]))
             if "poster_original" in movie['info']['images'] and len(movie['info']['images']['poster_original']) != 0:
                 card_items["poster"] = movie['info']['images']['poster_original'][0]
-            else:
+            elif "poster" in movie['info']['images'] and len(movie['info']['images']['poster']) != 0:
                 card_items["poster"] = movie['info']['images']['poster'][0]
+            else:
+                card_items["poster"] = ""
             if "runtime" in movie['info']:
                 card_items['runtime'] =  movie['info']["runtime"]
             card_json.append(card_items)
