@@ -80,11 +80,13 @@ class CouchPotatoSensor(Entity):
 
         for movie in ifs_movies['movies']:
             card_items = {}
-            if "released" in movie['info']:
+            if "released" in movie['info'] and not "".__eq__(movie['info']['released']):
                 card_items['airdate'] = movie['info']['released']
-            else:
+            elif "release_date" in movie['info'] and len(movie['info']['release_date']['expires']) != 0:
                 card_items['airdate'] = datetime.fromtimestamp(movie['info']['release_date']['expires']).strftime(
                     "%Y-%m-%d")
+            else:
+                card_items['airdate'] = " "
             card_items['episode'] = ""
             card_items['release'] = "$day, $date $time"
             if "original_title" in movie['info']:
