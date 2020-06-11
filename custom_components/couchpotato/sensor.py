@@ -4,6 +4,7 @@ from datetime import datetime
 
 import requests
 import json
+import re
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -17,6 +18,8 @@ DEFAULT_NAME = "CouchPotato"
 DEFAULT_HOST = "localhost"
 DEFAULT_PROTO = "http"
 DEFAULT_PORT = "5050"
+
+PATTERN_DATE = '(\d){4}-(\d){2}-(\d){2}'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOKEN): cv.string,
@@ -81,14 +84,14 @@ class CouchPotatoSensor(Entity):
         for movie in ifs_movies['movies']:
             card_items = {}
             if "released" in movie['info'] and not "".__eq__(movie['info']['released']):
-                card_items['airdate'] = movie['info']['released']
+                card_items['airdate'] = self.parse_date(movie['info']['released'])
             elif "release_date" in movie['info'] and len(movie['info']['release_date']['expires']) != 0:
-                card_items['airdate'] = datetime.fromtimestamp(movie['info']['release_date']['expires']).strftime(
-                    "%Y-%m-%d")
+                card_items['airdate'] = self.parse_date(movie['info']['release_date']['expires'])
             else:
                 card_items['airdate'] = " "
+
             card_items['episode'] = ""
-            card_items['release'] = "$day, $date $time"
+            card_items['release'] = "$day, $date"
             if "original_title" in movie['info']:
                 card_items["title"] = movie['info']['original_title']
             if "genres" in movie['info']:
@@ -118,3 +121,16 @@ class CouchPotatoSensor(Entity):
             self.limit)
         ifs_movies = requests.get(url).json()
         return ifs_movies
+
+    def parse_date(self, airdate):
+        matcher = re.match(PATTERN_DATE, airdate)
+        try:
+            if matcher:
+                airdate = datetime.strptime(airdate, "%Y-%m-%d").isoformat() + "Z"
+            else:
+                airdate = datetime.strptime(datetime.strptime(airdate, '%d %b %Y').strftime("%Y-%m-%d"),
+                                        "%Y-%m-%d").isoformat() + "Z"
+        except:
+            _LOGGER.error("Unknow date format")
+
+        return airdate
