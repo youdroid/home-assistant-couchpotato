@@ -18,6 +18,9 @@ DEFAULT_NAME = "CouchPotato"
 DEFAULT_HOST = "localhost"
 DEFAULT_PROTO = "http"
 DEFAULT_PORT = "5050"
+DEFAULT_SORTING = "name"
+CONF_SORTING = "sort"
+
 
 PATTERN_DATE = '(\d){4}-(\d){2}-(\d){2}'
 
@@ -28,7 +31,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTO): cv.string,
     vol.Optional(CONF_MAXIMUM, default=DEFAULT_LIMIT): cv.string,
     vol.Optional(CONF_STATE, default=DEFAULT_STATE): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_SORTING, default=DEFAULT_SORTING): cv.string
 })
 
 
@@ -49,6 +53,7 @@ class CouchPotatoSensor(Entity):
         self.data = None
         self.state_movies = config.get(CONF_STATE)
         self.limit = config.get(CONF_MAXIMUM)
+        self.sort = config.get(CONF_SORTING)
 
     @property
     def name(self):
@@ -68,7 +73,7 @@ class CouchPotatoSensor(Entity):
     def update(self):
         attributes = {}
         card_json = []
-
+        movie_tab = []
         init = {}
         """Initialized JSON Object"""
         init['title_default'] = '$title'
@@ -106,7 +111,12 @@ class CouchPotatoSensor(Entity):
                 card_items["poster"] = ""
             if "runtime" in movie['info']:
                 card_items['runtime'] = movie['info']["runtime"]
-            card_json.append(card_items)
+            movie_tab.append(card_items)
+
+        if self.sort == "date":
+            movie_tab.sort(key=lambda x: x.get('airdate'))
+
+        card_json = card_json + movie_tab
         attributes['data'] = json.dumps(card_json)
         if ifs_movies["success"].__eq__("True"):
             self._state = "Success"
