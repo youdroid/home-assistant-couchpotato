@@ -4,6 +4,7 @@ from datetime import datetime
 
 import requests
 import json
+import re
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -17,6 +18,11 @@ DEFAULT_NAME = "CouchPotato"
 DEFAULT_HOST = "localhost"
 DEFAULT_PROTO = "http"
 DEFAULT_PORT = "5050"
+DEFAULT_SORTING = "name"
+CONF_SORTING = "sort"
+
+
+PATTERN_DATE = '(\d){4}-(\d){2}-(\d){2}'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOKEN): cv.string,
@@ -25,7 +31,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTO): cv.string,
     vol.Optional(CONF_MAXIMUM, default=DEFAULT_LIMIT): cv.string,
     vol.Optional(CONF_STATE, default=DEFAULT_STATE): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_SORTING, default=DEFAULT_SORTING): cv.string
 })
 
 
@@ -46,6 +53,7 @@ class CouchPotatoSensor(Entity):
         self.data = None
         self.state_movies = config.get(CONF_STATE)
         self.limit = config.get(CONF_MAXIMUM)
+        self.sort = config.get(CONF_SORTING)
 
     @property
     def name(self):
@@ -65,7 +73,7 @@ class CouchPotatoSensor(Entity):
     def update(self):
         attributes = {}
         card_json = []
-
+        movie_tab = []
         init = {}
         """Initialized JSON Object"""
         init['title_default'] = '$title'
@@ -81,14 +89,14 @@ class CouchPotatoSensor(Entity):
         for movie in ifs_movies['movies']:
             card_items = {}
             if "released" in movie['info'] and not "".__eq__(movie['info']['released']):
-                card_items['airdate'] = movie['info']['released']
+                card_items['airdate'] = self.parse_date(movie['info']['released'])
             elif "release_date" in movie['info'] and len(movie['info']['release_date']['expires']) != 0:
-                card_items['airdate'] = datetime.fromtimestamp(movie['info']['release_date']['expires']).strftime(
-                    "%Y-%m-%d")
+                card_items['airdate'] = self.parse_date(movie['info']['release_date']['expires'])
             else:
                 card_items['airdate'] = " "
+
             card_items['episode'] = ""
-            card_items['release'] = "$day, $date $time"
+            card_items['release'] = "$day, $date"
             if "original_title" in movie['info']:
                 card_items["title"] = movie['info']['original_title']
             if "genres" in movie['info']:
@@ -103,7 +111,12 @@ class CouchPotatoSensor(Entity):
                 card_items["poster"] = ""
             if "runtime" in movie['info']:
                 card_items['runtime'] = movie['info']["runtime"]
-            card_json.append(card_items)
+            movie_tab.append(card_items)
+
+        if self.sort == "date":
+            movie_tab.sort(key=lambda x: x.get('airdate'))
+
+        card_json = card_json + movie_tab
         attributes['data'] = json.dumps(card_json)
         if ifs_movies["success"].__eq__("True"):
             self._state = "Success"
@@ -118,3 +131,16 @@ class CouchPotatoSensor(Entity):
             self.limit)
         ifs_movies = requests.get(url).json()
         return ifs_movies
+
+    def parse_date(self, airdate):
+        matcher = re.match(PATTERN_DATE, airdate)
+        try:
+            if matcher:
+                airdate = datetime.strptime(airdate, "%Y-%m-%d").isoformat() + "Z"
+            else:
+                airdate = datetime.strptime(datetime.strptime(airdate, '%d %b %Y').strftime("%Y-%m-%d"),
+                                        "%Y-%m-%d").isoformat() + "Z"
+        except:
+            _LOGGER.error("Unknow date format")
+
+        return airdate
