@@ -21,8 +21,10 @@ Home Assistant component to feed Upcoming Media Card with Couchpotato's recently
 | token | | yes | Your CouchPotato token [(Find your CouchPotato token)](https://github.com/youdroid/home-assistant-couchpotato/wiki/Get-your-CouchPotato-Token)
 | host | localhost | no | The host which CouchPotato is running on.
 | port | 5050 | no | The port which CouchPotato is running on.
+| protocol | http | no | The HTTP protocol used by CouchPotato.
 | max | 10 | no | Max number of items to show in sensor.
-| state | active | no | Defines the state of movies that you want to follow [active or done]
+| state | active | no | Defines the state of movies that you want to follow **[active or done]**
+| sort | name | no | Parameter to sort your movies **[name or date]**
 
 ## Exemples
 
