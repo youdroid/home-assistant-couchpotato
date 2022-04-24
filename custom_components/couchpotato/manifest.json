@@ -1,9 +1,10 @@
 {
   "domain": "couchpotato",
   "name": "couchpotato",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "documentation": "https://github.com/youdroid/home-assistant-couchpotato",
   "requirements": [],
   "dependencies": [],
-  "codeowners": ["@youdroid"]
+  "codeowners": ["@youdroid"],
+  "iot_class": "cloud_polling"
 }
